@@ -9,21 +9,44 @@ use substreams::{proto, store};
 
 use crate::pb;
 
-pub const WBNB_ADDRESS: &str = "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c";
-pub const BUSD_WBNB_PAIR: &str = "0x58f876857a02d6762e0101bb5c46a8c1ed44dc16";
-pub const USDT_WBNB_PAIR: &str = "0x16b9a82891338f9ba80e2d6970fdda79d1eb0dae";
+pub const NATIVE_ADDRESS: &str = "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270";
+pub const WMATIC_USDC_PAIR: &str = "0xcd353f79d9fade311fc3119b841e1f456b54e858";
+pub const WMATIC_USDT_PAIR: &str = "0x55ff76bffc3cdd9d5fdbbc2ece4528ecce45047e";
 pub const BUSD_PRICE_KEY: &str =
     "price:0xe9e7cea3dedca5984780bafc599bd69add087d56:0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c";
 pub const USDT_PRICE_KEY: &str =
     "price:0x55d398326f99059ff775485246999027b3197955:0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c";
 
-const WHITELIST_TOKENS: [&str; 6] = [
-    "0xe9e7cea3dedca5984780bafc599bd69add087d56", // BUSD
-    "0x55d398326f99059ff775485246999027b3197955", // USDT
-    "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", // USDC
-    "0x23396cf899ca06c4472205fc903bdb4de249d6fc", // UST
-    "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c", // BTCB
-    "0x2170ed0880ac9a755fd29b2688956bd959f933f8", // WETH
+pub const SUSHI_ADDRESS: &str = "0x0b3f868e0be5597d5db7feb59e1cadbb0fdda50a";
+pub const WETH_ADDRESS: &str = "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619";
+pub const WBTC_ADDRESS: &str = "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6";
+pub const USDC_ADDRESS: &str = "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
+pub const USDT_ADDRESS: &str = "0xc2132d05d31c914a87c6611c10748aeb04b58e8f";
+pub const DAI_ADDRESS: &str = "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063";
+pub const AAVE_ADDRESS: &str = "0xd6df932a45c0f255f85145f286ea0b292b21c90b";
+pub const FRAX_ADDRESS: &str = "0x45c32fa6df82ead1e2ef74d17b76547eddfaff89";
+pub const BCT_ADDRESS: &str = "0x2f800db0fdb5223b3c3f354886d907a671414a7f";
+pub const AURUM_ADDRESS: &str = "0x34d4ab47bee066f361fa52d792e69ac7bd05ee23";
+pub const MSU_ADDRESS: &str = "0xe8377a076adabb3f9838afb77bee96eac101ffb1";
+pub const DMAGIC_ADDRESS: &str = "0x61daecab65ee2a1d5b6032df030f3faa3d116aa7";
+pub const NDEFI_ADDRESS: &str = "0xd3f07ea86ddf7baebefd49731d7bbd207fedc53b";
+
+
+const WHITELIST_TOKENS: [&str; 14] = [
+    NATIVE_ADDRESS,
+    SUSHI_ADDRESS,
+    WETH_ADDRESS,
+    WBTC_ADDRESS,
+    USDC_ADDRESS,
+    USDT_ADDRESS,
+    DAI_ADDRESS,
+    AAVE_ADDRESS,
+    FRAX_ADDRESS,
+    BCT_ADDRESS,
+    AURUM_ADDRESS,
+    MSU_ADDRESS,
+    DMAGIC_ADDRESS,
+    NDEFI_ADDRESS,
 ];
 
 pub fn convert_token_to_decimal(amount: &[u8], decimals: &u64) -> BigDecimal {
@@ -48,67 +71,67 @@ pub fn generate_tokens_key(token0: &str, token1: &str) -> String {
 
 // not sure about the & in front of reserve
 pub fn compute_usd_price(reserves_store: &store::StoreGet, reserve: &pb::pcs::Reserve) -> BigDecimal {
-    let busd_bnb_reserve_big_decimal;
-    let usdt_bnb_reserve_big_decimal;
+    let wmatic_usdc_reserve_big_decimal;
+    let wmatic_usdt_reserve_big_decimal;
 
     match reserves_store.get_at(
         reserve.log_ordinal,
-        &format!("reserve:{}:{}", BUSD_WBNB_PAIR, WBNB_ADDRESS),
+        &format!("reserve:{}:{}", WMATIC_USDC_PAIR, NATIVE_ADDRESS),
     ) {
-        None => busd_bnb_reserve_big_decimal = zero_big_decimal(),
+        None => wmatic_usdc_reserve_big_decimal = zero_big_decimal(),
         Some(reserve_bytes) => {
-            busd_bnb_reserve_big_decimal = decode_reserve_bytes_to_big_decimal(reserve_bytes)
+            wmatic_usdc_reserve_big_decimal = decode_reserve_bytes_to_big_decimal(reserve_bytes)
         }
     }
 
     match reserves_store.get_at(
         reserve.log_ordinal,
-        &format!("reserve:{}:{}", USDT_WBNB_PAIR, WBNB_ADDRESS),
+        &format!("reserve:{}:{}", WMATIC_USDT_PAIR, NATIVE_ADDRESS),
     ) {
-        None => usdt_bnb_reserve_big_decimal = zero_big_decimal(),
+        None => wmatic_usdt_reserve_big_decimal = zero_big_decimal(),
         Some(reserve_bytes) => {
-            usdt_bnb_reserve_big_decimal = decode_reserve_bytes_to_big_decimal(reserve_bytes)
+            wmatic_usdt_reserve_big_decimal = decode_reserve_bytes_to_big_decimal(reserve_bytes)
         }
     }
 
-    let mut total_liquidity_bnb = zero_big_decimal();
-    total_liquidity_bnb = total_liquidity_bnb
+    let mut total_liquidity_native = zero_big_decimal();
+    total_liquidity_native = total_liquidity_native
         .clone()
-        .add(busd_bnb_reserve_big_decimal.clone());
-    total_liquidity_bnb = total_liquidity_bnb
+        .add(wmatic_usdc_reserve_big_decimal.clone());
+    total_liquidity_native = total_liquidity_native
         .clone()
-        .add(usdt_bnb_reserve_big_decimal.clone());
+        .add(wmatic_usdt_reserve_big_decimal.clone());
 
     let zero = zero_big_decimal();
 
-    if total_liquidity_bnb.eq(&zero) {
+    if total_liquidity_native.eq(&zero) {
         return zero;
     }
 
-    if busd_bnb_reserve_big_decimal.eq(&zero) {
-        return match reserves_store.get_at(
-            reserve.log_ordinal,
-            &USDT_PRICE_KEY.to_string(),
-        ) {
-            None => zero,
-            Some(reserve_bytes) => decode_reserve_bytes_to_big_decimal(reserve_bytes),
-        };
-    } else if usdt_bnb_reserve_big_decimal.eq(&zero) {
-        return match reserves_store.get_at(
-            reserve.log_ordinal,
-            &BUSD_PRICE_KEY.to_string(),
-        ) {
-            None => zero,
-            Some(reserve_bytes) => decode_reserve_bytes_to_big_decimal(reserve_bytes),
-        };
-    }
+    // if wmatic_usdc_reserve_big_decimal.eq(&zero) {
+    //     return match reserves_store.get_at(
+    //         reserve.log_ordinal,
+    //         &USDT_PRICE_KEY.to_string(),
+    //     ) {
+    //         None => zero,
+    //         Some(reserve_bytes) => decode_reserve_bytes_to_big_decimal(reserve_bytes),
+    //     };
+    // } else if wmatic_usdt_reserve_big_decimal.eq(&zero) {
+    //     return match reserves_store.get_at(
+    //         reserve.log_ordinal,
+    //         &BUSD_PRICE_KEY.to_string(),
+    //     ) {
+    //         None => zero,
+    //         Some(reserve_bytes) => decode_reserve_bytes_to_big_decimal(reserve_bytes),
+    //     };
+    // }
 
     // both found and not equal to zero, average out
-    let busd_weight = busd_bnb_reserve_big_decimal
-        .div(total_liquidity_bnb.clone())
+    let usdc_weight = wmatic_usdc_reserve_big_decimal
+        .div(total_liquidity_native.clone())
         .with_prec(100);
-    let usdt_weight = usdt_bnb_reserve_big_decimal
-        .div(total_liquidity_bnb)
+    let usdt_weight = wmatic_usdt_reserve_big_decimal
+        .div(total_liquidity_native)
         .with_prec(100);
 
     let busd_price = match reserves_store.get_at(
@@ -127,35 +150,35 @@ pub fn compute_usd_price(reserves_store: &store::StoreGet, reserve: &pb::pcs::Re
         Some(reserve_bytes) => decode_reserve_bytes_to_big_decimal(reserve_bytes),
     };
 
-    let busd_price_over_weight = busd_price.mul(busd_weight).with_prec(100);
+    let usdc_price_over_weight = busd_price.mul(usdc_weight).with_prec(100);
     let usdt_price_over_weight = usdt_price.mul(usdt_weight).with_prec(100);
 
     let mut usd_price = zero_big_decimal();
-    usd_price = usd_price.add(busd_price_over_weight);
+    usd_price = usd_price.add(usdc_price_over_weight);
     usd_price = usd_price.add(usdt_price_over_weight);
 
     usd_price
 }
 
-pub fn find_bnb_price_per_token(
+pub fn find_native_price_per_token(
     log_ordinal: &u64,
     erc20_token_address: &str,
     pairs_store: &store::StoreGet,
     reserves_store: &store::StoreGet,
 ) -> Option<BigDecimal> {
-    if erc20_token_address.eq(WBNB_ADDRESS) {
-        return Some(one_big_decimal()); // BNB price of a BNB is always 1
+    if erc20_token_address.eq(NATIVE_ADDRESS) {
+        return Some(one_big_decimal()); // native price of a native is always 1
     }
 
-    let direct_to_bnb_price = match reserves_store.get_last(
-        &format!("price:{}:{}", WBNB_ADDRESS, erc20_token_address),
+    let direct_to_native_price = match reserves_store.get_last(
+        &format!("price:{}:{}", NATIVE_ADDRESS, erc20_token_address),
     ) {
         None => zero_big_decimal(),
         Some(reserve_bytes) => decode_reserve_bytes_to_big_decimal(reserve_bytes),
     };
 
-    if direct_to_bnb_price.ne(&zero_big_decimal()) {
-        return Some(direct_to_bnb_price);
+    if direct_to_native_price.ne(&zero_big_decimal()) {
+        return Some(direct_to_native_price);
     }
 
     // loop all whitelist for a matching pair
@@ -171,9 +194,9 @@ pub fn find_bnb_price_per_token(
             Some(pair_bytes) => decode_pair_bytes(pair_bytes),
         };
 
-        let major_to_bnb_price = match reserves_store.get_at(
+        let major_to_native_price = match reserves_store.get_at(
             *log_ordinal,
-            &format!("price:{}:{}", major_token, WBNB_ADDRESS),
+            &format!("price:{}:{}", major_token, NATIVE_ADDRESS),
         ) {
             None => continue,
             Some(reserve_bytes) => decode_reserve_bytes_to_big_decimal(reserve_bytes),
@@ -194,15 +217,15 @@ pub fn find_bnb_price_per_token(
                 Some(reserve_bytes) => decode_reserve_bytes_to_big_decimal(reserve_bytes)
             };
 
-        let bnb_reserve_in_major_pair = major_to_bnb_price.clone().mul(major_reserve);
-        // We're checking for half of it, because `reserves_bnb` would have both sides in it.
-        // We could very well check the other reserve's BNB value, would be a bit more heavy, but we can do it.
-        if bnb_reserve_in_major_pair.le(&BigDecimal::from_str("5").unwrap()) {
+        let native_reserve_in_major_pair = major_to_native_price.clone().mul(major_reserve);
+        // We're checking for half of it, because `reserves_native` would have both sides in it.
+        // We could very well check the other reserve's native value, would be a bit more heavy, but we can do it.
+        if native_reserve_in_major_pair.le(&BigDecimal::from_str("5").unwrap()) {
             // todo: little or big ?
             continue; // Not enough liquidity
         }
 
-        return Some(tiny_to_major_price.mul(major_to_bnb_price));
+        return Some(tiny_to_major_price.mul(major_to_native_price));
     }
 
     return None;

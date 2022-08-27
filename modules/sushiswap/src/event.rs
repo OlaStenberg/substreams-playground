@@ -206,18 +206,18 @@ pub fn process_swap(
     let amount0_total = amount0_out.clone().add(amount0_in.clone());
     let amount1_total = amount1_out.clone().add(amount1_in.clone());
 
-    let mut big_decimals_bnb = Vec::new();
-    big_decimals_bnb.push(get_derived_price(
+    let mut big_decimals_native = Vec::new();
+    big_decimals_native.push(get_derived_price(
         &swap_event.log_index,
         &prices_store,
-        "bnb".to_string(),
+        "native".to_string(),
         &amount0_total,
         &pair.token0_address,
     ));
-    big_decimals_bnb.push(get_derived_price(
+    big_decimals_native.push(get_derived_price(
         &swap_event.log_index,
         &prices_store,
-        "bnb".to_string(),
+        "native".to_string(),
         &amount1_total,
         &pair.token1_address,
     ));
@@ -238,7 +238,7 @@ pub fn process_swap(
         &pair.token1_address,
     ));
 
-    let derived_amount_bnb = average_floats(&big_decimals_bnb);
+    let derived_amount_native = average_floats(&big_decimals_native);
     let tracked_amount_usd = average_floats(&big_decimals_usd);
 
     let token0_trade_volume: BigDecimal = amount1_in.clone().add(&amount0_out);
@@ -260,7 +260,7 @@ pub fn process_swap(
         amount1_in: amount1_in.to_string(),
         amount0_out: amount0_out.to_string(),
         amount1_out: amount1_out.to_string(),
-        amount_bnb: derived_amount_bnb.to_string(),
+        amount_native: derived_amount_native.to_string(),
         amount_usd: tracked_amount_usd.to_string(),
         trade_volume0: token0_trade_volume.to_string(),
         trade_volume1: token1_trade_volume.to_string(),
@@ -288,40 +288,40 @@ fn convert_prices(
     let token0_amount = convert_token_to_decimal(amount0, &token0_decimals);
     let token1_amount = convert_token_to_decimal(amount1, &token1_decimals);
 
-    let derived_bnb0_big_decimal = match prices_store.get_at(
+    let derived_native0_big_decimal = match prices_store.get_at(
         *log_ordinal,
-        &format!("dprice:{}:bnb", pair.token0_address),
+        &format!("dprice:{}:native", pair.token0_address),
     ) {
         None => zero_big_decimal(),
-        Some(derived_bnb0_bytes) => {
-            BigDecimal::from_str(str::from_utf8(derived_bnb0_bytes.as_slice()).unwrap()).unwrap()
+        Some(derived_native0_bytes) => {
+            BigDecimal::from_str(str::from_utf8(derived_native0_bytes.as_slice()).unwrap()).unwrap()
         }
     };
 
-    let derived_bnb1_big_decimal = match prices_store.get_at(
+    let derived_native1_big_decimal = match prices_store.get_at(
         *log_ordinal,
-        &format!("dprice:{}:bnb", pair.token1_address),
+        &format!("dprice:{}:native", pair.token1_address),
     ) {
         None => zero_big_decimal(),
-        Some(derived_bnb1_bytes) => {
-            BigDecimal::from_str(str::from_utf8(derived_bnb1_bytes.as_slice()).unwrap()).unwrap()
+        Some(derived_native1_bytes) => {
+            BigDecimal::from_str(str::from_utf8(derived_native1_bytes.as_slice()).unwrap()).unwrap()
         }
     };
 
     let usd_price_big_decimal =
-        match prices_store.get_at(*log_ordinal, &format!("dprice:usd:bnb")) {
+        match prices_store.get_at(*log_ordinal, &format!("dprice:usd:native")) {
             None => zero_big_decimal(),
             Some(usd_price_bytes) => {
                 BigDecimal::from_str(str::from_utf8(usd_price_bytes.as_slice()).unwrap()).unwrap()
             }
         };
 
-    let derived_bnb0_mul_token0_amount = derived_bnb0_big_decimal.mul(&token0_amount);
-    let derived_bnb1_mul_token1_amount = derived_bnb1_big_decimal.mul(&token1_amount);
+    let derived_native0_mul_token0_amount = derived_native0_big_decimal.mul(&token0_amount);
+    let derived_native1_mul_token1_amount = derived_native1_big_decimal.mul(&token1_amount);
 
-    let sum_derived_bnb = derived_bnb0_mul_token0_amount.add(derived_bnb1_mul_token1_amount);
+    let sum_derived_native = derived_native0_mul_token0_amount.add(derived_native1_mul_token1_amount);
 
-    let amount_total_usd = sum_derived_bnb.mul(usd_price_big_decimal);
+    let amount_total_usd = sum_derived_native.mul(usd_price_big_decimal);
 
     return (token0_amount, token1_amount, amount_total_usd);
 }

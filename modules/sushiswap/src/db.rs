@@ -290,7 +290,7 @@ fn handle_volume_delta(delta: StoreDelta, changes: &mut DatabaseChanges, block: 
             operation = Operation::Update as i32;
             let field = match key {
                 "usd" => field_from_strings!("total_volume_usd", delta),
-                "bnb" => field_from_strings!("total_volume_bnb", delta),
+                "native" => field_from_strings!("total_volume_native", delta),
                 "liquidity_usd" => field_from_strings!("total_liquidity_usd", delta),
                 _ => return,
             };
@@ -311,7 +311,7 @@ fn handle_volume_delta(delta: StoreDelta, changes: &mut DatabaseChanges, block: 
                     operation = delta.operation;
                     field_from_strings!("daily_volume_usd", delta)
                 }
-                "bnb" => field_from_strings!("daily_volume_bnb", delta),
+                "native" => field_from_strings!("daily_volume_native", delta),
                 _ => return,
             };
 

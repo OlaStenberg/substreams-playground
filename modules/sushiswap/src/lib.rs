@@ -31,9 +31,7 @@ pub fn map_pairs(blk: pb::eth::Block) -> Result<pcs::Pairs, Error> {
     let mut pairs = pcs::Pairs { pairs: vec![] };
 
     for trx in blk.transaction_traces {
-        /* PCS Factory address */
-        //0xbcfccbde45ce874adcb698cc183debcf17952812
-        if hex::encode(&trx.to) != "ca143ce32fe78f1f7019d7d551a6402fc5350c73" {
+        if hex::encode(&trx.to) != "0xc35dadb65012ec5796536bd9864ed8773abc74c4" {
             continue;
         }
 
@@ -200,65 +198,65 @@ pub fn store_prices(clock: substreams::pb::substreams::Clock, reserves: pcs::Res
                 let latest_usd_price: BigDecimal =
                     utils::compute_usd_price(&reserves_store, &reserve);
 
-                if reserve.pair_address.eq(&utils::USDT_WBNB_PAIR)
-                    || reserve.pair_address.eq(&utils::BUSD_WBNB_PAIR)
+                if reserve.pair_address.eq(&utils::WMATIC_USDT_PAIR)
+                    || reserve.pair_address.eq(&utils::WMATIC_USDC_PAIR)
                 {
                     output.set(
                         reserve.log_ordinal,
-                        format!("dprice:usd:bnb"),
+                        format!("dprice:usd:native"),
                         &Vec::from(latest_usd_price.to_string()),
                     )
                 }
 
                 // sets:
-                // * dprice:%s:bnb (tokenA)  - as contributed by any pair's sync to that token
+                // * dprice:%s:native (tokenA)  - as contributed by any pair's sync to that token
                 // * dprice:%s:usd (tokenA)  - same
-                // * dreserve:%s:%s:bnb (pair, token)
+                // * dreserve:%s:%s:native (pair, token)
                 // * dreserve:%s:%s:usd (pair, token)
-                // * dreserves:%s:bnb (pair)  - sum of both token's reserves
+                // * dreserves:%s:native (pair)  - sum of both token's reserves
                 // derived from:
                 // * price:%s:%s (tokenA, tokenB)
                 // * reserve:%s:%s (pair, tokenA)
                 let usd_price_valid: bool = latest_usd_price.ne(&zero_big_decimal());
 
-                let t0_derived_bnb_price = utils::find_bnb_price_per_token(
+                let t0_derived_native_price = utils::find_native_price_per_token(
                     &reserve.log_ordinal,
                     pair.token0_address.as_str(),
                     &pairs,
                     &reserves_store,
                 );
 
-                let t1_derived_bnb_price = utils::find_bnb_price_per_token(
+                let t1_derived_native_price = utils::find_native_price_per_token(
                     &reserve.log_ordinal,
                     pair.token1_address.as_str(),
                     &pairs,
                     &reserves_store,
                 );
 
-                let apply = |token_derived_bnb_price: Option<BigDecimal>,
+                let apply = |token_derived_native_price: Option<BigDecimal>,
                              token_addr: String,
                              reserve_amount: String|
                  -> BigDecimal {
-                    if token_derived_bnb_price.is_none() {
+                    if token_derived_native_price.is_none() {
                         return zero_big_decimal();
                     }
 
                     output.set(
                         reserve.log_ordinal,
-                        format!("dprice:{}:bnb", token_addr),
-                        &Vec::from(token_derived_bnb_price.clone().unwrap().to_string()),
+                        format!("dprice:{}:native", token_addr),
+                        &Vec::from(token_derived_native_price.clone().unwrap().to_string()),
                     );
-                    let reserve_in_bnb = BigDecimal::from_str(reserve_amount.as_str())
+                    let reserve_in_native = BigDecimal::from_str(reserve_amount.as_str())
                         .unwrap()
-                        .mul(token_derived_bnb_price.clone().unwrap());
+                        .mul(token_derived_native_price.clone().unwrap());
                     output.set(
                         reserve.log_ordinal,
-                        format!("dreserve:{}:{}:bnb", reserve.pair_address, token_addr),
-                        &Vec::from(reserve_in_bnb.clone().to_string()),
+                        format!("dreserve:{}:{}:native", reserve.pair_address, token_addr),
+                        &Vec::from(reserve_in_native.clone().to_string()),
                     );
 
                     if usd_price_valid {
-                        let derived_usd_price = token_derived_bnb_price
+                        let derived_usd_price = token_derived_native_price
                             .unwrap()
                             .mul(latest_usd_price.clone());
                         output.set_many(
@@ -270,7 +268,7 @@ pub fn store_prices(clock: substreams::pb::substreams::Clock, reserves: pcs::Res
                             &Vec::from(derived_usd_price.to_string()),
                         );
 
-                        let reserve_in_usd = reserve_in_bnb.clone().mul(latest_usd_price.clone());
+                        let reserve_in_usd = reserve_in_native.clone().mul(latest_usd_price.clone());
 
                         output.set_many(
                             reserve.log_ordinal,
@@ -291,26 +289,26 @@ pub fn store_prices(clock: substreams::pb::substreams::Clock, reserves: pcs::Res
                         );
                     }
 
-                    return reserve_in_bnb;
+                    return reserve_in_native;
                 };
 
-                let reserve0_bnb = apply(
-                    t0_derived_bnb_price,
+                let reserve0_native = apply(
+                    t0_derived_native_price,
                     pair.token0_address.clone(),
                     reserve.reserve0.clone(),
                 );
-                let reserve1_bnb = apply(
-                    t1_derived_bnb_price,
+                let reserve1_native = apply(
+                    t1_derived_native_price,
                     pair.token1_address.clone(),
                     reserve.reserve1.clone(),
                 );
 
-                let reserves_bnb_sum = reserve0_bnb.mul(reserve1_bnb);
-                if reserves_bnb_sum.ne(&zero_big_decimal()) {
+                let reserves_native_sum = reserve0_native.mul(reserve1_native);
+                if reserves_native_sum.ne(&zero_big_decimal()) {
                     output.set(
                         reserve.log_ordinal,
-                        format!("dreserves:{}:bnb", reserve.pair_address),
-                        &Vec::from(reserves_bnb_sum.to_string()),
+                        format!("dreserves:{}:native", reserve.pair_address),
+                        &Vec::from(reserves_native_sum.to_string()),
                     );
                 }
             }
@@ -687,7 +685,7 @@ pub fn store_volumes(
                     if amount_usd.eq(&zero_big_decimal()) {
                         continue;
                     }
-                    let amount_bnb = BigDecimal::from_str(swap.amount_bnb.as_str()).unwrap();
+                    let amount_native = BigDecimal::from_str(swap.amount_native.as_str()).unwrap();
 
                     let amount_0_total: BigDecimal =
                         utils::compute_amount_total(swap.amount0_out, swap.amount0_in);
@@ -710,8 +708,8 @@ pub fn store_volumes(
 
                     output.add_many(
                         event.log_ordinal,
-                        &vec![format!("global:bnb"), format!("global_day:{}:bnb", day_id)],
-                        &amount_bnb,
+                        &vec![format!("global:native"), format!("global_day:{}:native", day_id)],
+                        &amount_native,
                     );
 
                     output.add_many(
@@ -755,7 +753,7 @@ pub fn store_volumes(
                         &BigDecimal::from_str(swap.trade_volume_usd1.as_str()).unwrap(),
                     );
 
-                    //todo: token[0,1]Day.dailyVolumeToken, tokenDay[0,1].dailyVolumeBnb ? what about these
+                    //todo: token[0,1]Day.dailyVolumeToken, tokenDay[0,1].dailyVolumenative ? what about these
                 }
             }
         }

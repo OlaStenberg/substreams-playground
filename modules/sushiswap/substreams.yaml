@@ -4,7 +4,7 @@ package:
   version: v0.5.1
   url: https://github.com/streamingfast/substreams-playground
   doc: |
-    These substream modules compose all the things to build up the PancakeSwap substreams.
+    These substream modules compose all the things to build up the SushiSwap substreams.
 
     See individual modules docs for help.
 
@@ -32,7 +32,7 @@ binaries:
 modules:
   - name: map_pairs
     kind: map
-    initialBlock: 6810706
+    initialBlock: 11333218
     binary: default  # Implicit
     inputs:
       - source: sf.ethereum.type.v1.Block
@@ -41,7 +41,7 @@ modules:
 
   - name: store_pcs_tokens
     kind: store
-    initialBlock: 6810706
+    initialBlock: 11333218
     updatePolicy: set
     valueType: bytes
     inputs:
@@ -95,7 +95,7 @@ modules:
 
   - name: store_totals
     kind: store
-    initialBlock: 6810706
+    initialBlock: 11333218
     updatePolicy: add
     valueType: int64
     inputs:
@@ -113,7 +113,7 @@ modules:
 
   - name: db_out
     kind: map
-    initialBlock: 6810706
+    initialBlock: 11333218
     inputs:
       - source: sf.substreams.v1.Clock
       - store: store_pcs_tokens

@@ -67,7 +67,7 @@ message Swap {
   string amount0_out = 7;
   string amount1_out = 8;
 
-  string amount_bnb = 9;
+  string amount_native = 9;
   string amount_usd = 10;
 
   string trade_volume0 = 11;
