@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package pcs.types.v1;
 
-option go_package = "github.com/streamingfast/substream-pancakeswap/pcs-go;pcs";
+option go_package = "github.com/olastenberg/substream-sushiswap/pcs-go;pcs";
 
 message Pairs {
   repeated Pair pairs = 1;

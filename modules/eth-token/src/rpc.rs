@@ -11,7 +11,7 @@ pub fn create_rpc_calls(addr: &Vec<u8>, method_signatures: Vec<&str>) -> eth::rp
     for method_signature in method_signatures {
         rpc_calls.calls.push(eth::rpc::RpcCall {
             to_addr: Vec::from(addr.clone()),
-            method_signature: hex::decode(method_signature).unwrap(),
+            data: hex::decode(method_signature).unwrap(),
         })
     }
 

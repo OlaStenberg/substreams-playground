@@ -10,7 +10,7 @@ use crate::rpc::create_rpc_calls;
 const INITIALIZE_METHOD_HASH: [u8; 4] = hex!("1459457a");
 
 #[substreams::handlers::map]
-fn map_tokens(blk: ethpb::v1::Block) -> Result<pb::tokens::Tokens, Error> {
+fn map_tokens(blk: ethpb::v2::Block) -> Result<pb::tokens::Tokens, Error> {
     let mut tokens = vec![];
 
     for trx in blk.transaction_traces {
@@ -18,12 +18,12 @@ fn map_tokens(blk: ethpb::v1::Block) -> Result<pb::tokens::Tokens, Error> {
             if call.state_reverted {
                 continue;
             }
-            if call.call_type == ethpb::v1::CallType::Create as i32
-                || call.call_type == ethpb::v1::CallType::Call as i32
+            if call.call_type == ethpb::v2::CallType::Create as i32
+                || call.call_type == ethpb::v2::CallType::Call as i32
             // proxy contract creation
             {
                 let call_input_len = call.input.len();
-                if call.call_type == ethpb::v1::CallType::Call as i32
+                if call.call_type == ethpb::v2::CallType::Call as i32
                     && (call_input_len < 4 || call.input[0..4] != INITIALIZE_METHOD_HASH)
                 {
                     // this will check if a proxy contract has been called to create a ERC20 contract.
@@ -32,7 +32,7 @@ fn map_tokens(blk: ethpb::v1::Block) -> Result<pb::tokens::Tokens, Error> {
                     continue;
                 }
 
-                if call.call_type == ethpb::v1::CallType::Create as i32 {
+                if call.call_type == ethpb::v2::CallType::Create as i32 {
                     let mut code_change_len = 0;
                     for code_change in &call.code_changes {
                         code_change_len += code_change.new_code.len()

@@ -1,5 +1,5 @@
 [package]
-name = "pcs-substreams"
+name = "sushiswap-substreams"
 version = "0.1.0"
 description = "SushiSwap Substreams"
 edition = "2018"
@@ -9,14 +9,14 @@ crate-type = ["cdylib"]
 
 [dependencies]
 wasm-bindgen = "0.2.79"
-prost = { version = "0.10.1" }
-prost-types = "0.10.1"
+prost = { version = "0.11.0" }
+prost-types = "0.11.1"
 hex = "0.4.3"
-substreams = "0.0.11"
-substreams-ethereum = "0.1.2"
+substreams = "0.0.20"
+substreams-ethereum = "0.2.0"
 num-bigint = "0.4"
 bigdecimal = "0.3"
 pad = "0.1"
 
 [build-dependencies]
-prost-build = "0.10.1"
+prost-build = "0.11.1"

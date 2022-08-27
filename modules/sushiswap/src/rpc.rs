@@ -14,15 +14,15 @@ pub fn create_rpc_calls(addr: &Vec<u8>) -> eth::rpc::RpcCalls {
         calls: vec![
             eth::rpc::RpcCall {
                 to_addr: Vec::from(addr.clone()),
-                method_signature: decimals,
+                data: decimals,
             },
             eth::rpc::RpcCall {
                 to_addr: Vec::from(addr.clone()),
-                method_signature: name,
+                data: name,
             },
             eth::rpc::RpcCall {
                 to_addr: Vec::from(addr.clone()),
-                method_signature: symbol,
+                data: symbol,
             },
         ],
     };

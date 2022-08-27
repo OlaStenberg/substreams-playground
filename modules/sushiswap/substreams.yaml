@@ -2,7 +2,7 @@ specVersion: v0.1.0
 package:
   name: pcs
   version: v0.5.1
-  url: https://github.com/streamingfast/substreams-playground
+  url: https://github.com/OlaStenberg/substreams-playground
   doc: |
     These substream modules compose all the things to build up the SushiSwap substreams.
 
@@ -24,7 +24,7 @@ protobuf:
 binaries:
   default:
     type: wasm/rust-v1
-    file: ../../target/wasm32-unknown-unknown/release/pcs_substreams.wasm
+    file: ../../target/wasm32-unknown-unknown/release/sushiswap_substreams.wasm
   pcs_fixed:
     type: wasm/rust-v1
     file: snapshot.wasm
@@ -35,7 +35,7 @@ modules:
     initialBlock: 11333218
     binary: default  # Implicit
     inputs:
-      - source: sf.ethereum.type.v1.Block
+      - source: sf.ethereum.type.v2.Block
     output:
       type: proto:pcs.types.v1.Pairs
 
@@ -58,7 +58,7 @@ modules:
   - name: map_reserves
     kind: map
     inputs:
-      - source: sf.ethereum.type.v1.Block
+      - source: sf.ethereum.type.v2.Block
       - store: store_pairs
       - store: store_pcs_tokens
     output:
@@ -86,7 +86,7 @@ modules:
   - name: map_burn_swaps_events
     kind: map
     inputs:
-      - source: sf.ethereum.type.v1.Block
+      - source: sf.ethereum.type.v2.Block
       - store: store_pairs
       - store: store_reserves
       - store: store_pcs_tokens
